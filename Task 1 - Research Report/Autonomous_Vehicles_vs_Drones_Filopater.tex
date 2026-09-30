@@ -1,0 +1,278 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,margin=24mm,headsep=7mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\sisetup{range-phrase=--,range-units=single}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt minus 1pt}
+\setlength{\emergencystretch}{1em}
+\setlist[itemize]{leftmargin=1.6em,itemsep=3pt,topsep=4pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=1.8em,itemsep=4pt,topsep=4pt,parsep=0pt}
+
+\titleformat{\section}{\large\bfseries}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{14pt plus 2pt minus 2pt}{6pt}
+\titlespacing*{\subsection}{0pt}{10pt plus 2pt minus 1pt}{4pt}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+
+\setlength{\headheight}{15pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Autonomous Vehicles vs. UAVs}
+\fancyhead[R]{\small CodeAlpha Robotics \& Automation}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\small\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+\hypersetup{
+    pdftitle={Autonomous Vehicles vs. Unmanned Aerial Vehicles (Drones): A Comparative Analysis of Sensing, Navigation, and Regulatory Challenges},
+    pdfauthor={Filopater Edwar Aziz},
+    pdfsubject={Comparative review of autonomous ground and aerial delivery systems},
+    pdfkeywords={Autonomous vehicles, UAVs, sensor fusion, navigation, last-mile delivery}
+}
+
+\begin{document}
+\thispagestyle{plain}
+
+\begin{center}
+    {\LARGE\bfseries Autonomous Vehicles vs.\\[3pt]
+    Unmanned Aerial Vehicles (Drones)\par}
+    \vspace{8pt}
+    {\large\bfseries A Comparative Analysis of Sensing, Navigation,\\
+    and Regulatory Challenges\par}
+    \vspace{12pt}
+    {\normalsize\textbf{Filopater Edwar Aziz}\par
+    CodeAlpha Robotics \& Automation Intern\par
+    Department of Robotics and Industrial Automation\par
+    CodeAlpha Technology Innovation Program\par}
+    \vspace{5pt}
+    {\small September 2026\par}
+\end{center}
+
+\section*{Abstract}
+The expansion of e-commerce has increased pressure on last-mile delivery, where fragmented routes, road congestion, and manual handling complicate logistics. Autonomous ground vehicles (AVs) and unmanned aerial vehicles (UAVs, or drones) offer complementary approaches. Ground vehicles accommodate larger payloads and longer operating periods but remain constrained by road infrastructure and traffic. Small delivery drones can bypass surface bottlenecks, although battery capacity, weather exposure, and airspace requirements limit their operation. This paper compares sensing configurations, state estimation, localization, trajectory planning, and safety frameworks for the two platform classes. It also outlines a proposed multimodal architecture in which ground vehicles serve as mobile distribution hubs for aerial deliveries. The comparison is qualitative: no original experiments, performance benchmarks, or validated system-level design are presented, and the numerical operating ranges retained from the supplied draft require platform-specific verification.
+
+\textbf{Keywords:} Autonomous vehicles; unmanned aerial vehicles; drones; sensor fusion; LiDAR; SLAM; last-mile delivery; robotics automation.
+
+\section{Introduction and Problem Statement}
+E-commerce growth and expectations for rapid delivery place increasing demands on logistics. The final leg---the ``last mile''---involves urban stop-and-go driving, fragmented routes, and manual handling. The supplied draft attributes up to \SI{53}{\percent} of total shipping costs to this stage.\footnote{The originating dataset, cost definition, and geographical scope of the \SI{53}{\percent} estimate were not supplied or established in the reference review; the figure is retained as an unverified draft claim, not a general benchmark.} Road safety provides a further motivation for transport automation. The World Health Organization's 2018 report estimated \num{1.35} million annual road traffic deaths for 2016; this historical figure is not a September 2026 estimate~\cite{who2018}.
+
+Autonomous delivery solutions are being investigated for last-mile logistics~\cite{engesser2023}. Their suitability depends on the task and operating environment, rather than on autonomy alone. Potential environmental benefits also depend on deployment conditions and energy supply~\cite{stolaroff2018}.
+
+\begin{itemize}
+    \item \textbf{Autonomous ground vehicles (AVs):} Ground platforms can carry consolidated freight over road or sidewalk networks, but must negotiate traffic, pedestrians, and surface conditions. Payload and endurance vary substantially between sidewalk robots and larger road vehicles.
+    \item \textbf{Unmanned aerial vehicles (UAVs):} Small delivery drones can use direct aerial routes to bypass surface congestion, subject to obstacles, flight restrictions, and size, weight, power, and cost (SWaP-C) constraints.
+\end{itemize}
+
+Here, AV denotes an autonomous ground vehicle, rather than all autonomous vehicles. The aerial discussion primarily concerns small multirotor delivery drones; statements about hover, endurance, and emergency recovery should not be generalized to every UAV configuration. The paper retains the draft's comparative scope without treating its illustrative specifications as class-wide performance limits.
+
+\section{Technical Foundations: Sensing and Navigation}
+Autonomous navigation depends on timely environmental perception and state estimation. Complementary sensors can reduce the limitations of individual modalities; sensor selection and fusion must nevertheless be evaluated for the intended operating conditions~\cite{yeong2021,hasanujjaman2023}.
+
+\subsection{Autonomous Ground Vehicles}
+Self-driving ground platforms commonly combine the following sensing modalities~\cite{yeong2021}.
+
+\begin{enumerate}
+    \item \textbf{LiDAR (light detection and ranging):}
+    Pulsed infrared systems, including designs using \SI{905}{\nano\metre} or \SI{1550}{\nano\metre}, use time of flight (ToF) to obtain range measurements and construct three-dimensional (3D) point clouds. Centimeter-scale ranging accuracy reported for particular sensors should not be interpreted as guaranteed vehicle-localization accuracy. LiDAR does not require ambient illumination, but precipitation, fog, target reflectivity, hardware cost, and point-cloud processing affect its utility.
+
+    \item \textbf{Radar (radio detection and ranging):}
+    Automotive radar includes systems operating near \SI{77}{\giga\hertz}. Doppler processing estimates radial relative velocity; range estimation depends on the transmitted waveform and its processing, not on Doppler shift alone~\cite{tiRadar}. Radar can support perception in poor visibility, but adverse weather can still degrade detection performance~\cite{weather2023}. Angular resolution is sensor-dependent, and radar is not a substitute for visual interpretation of lane markings.
+
+    \item \textbf{Optical cameras:}
+    CMOS cameras provide image information for optical-flow estimation, traffic-control recognition, and lane-boundary segmentation. Monocular, stereo, and surround-view (\ang{360}) configurations offer different coverage and depth-estimation capabilities. Limitations include glare, low illumination, and large brightness transitions, such as tunnel exits. A single monocular image does not directly provide metric depth without additional assumptions or information.
+\end{enumerate}
+
+\subsection{Unmanned Aerial Vehicles}
+UAV sensing emphasizes low mass and low-latency feedback. The available sensor configurations depend on the aircraft and mission~\cite{chang2023}.
+
+\begin{enumerate}
+    \item \textbf{GNSS and RTK positioning:}
+    Global navigation satellite systems (GNSS), including the Global Positioning System (GPS), provide absolute outdoor position information. Real-time kinematic (RTK) positioning uses correction information to improve positioning under suitable conditions. Urban canyons can reduce reliability through signal blockage and multipath propagation.
+
+    \item \textbf{Inertial measurement units (IMUs):}
+    Microelectromechanical systems (MEMS) accelerometers and gyroscopes measure specific force and angular rate. Their measurements support attitude and motion estimation rather than directly measuring absolute position. The draft assumes sampling rates above \SI{500}{\hertz}; this is a sensor-selection assumption, not a universal UAV requirement. Bias and noise accumulate into dead-reckoning error when inertial measurements are integrated without external corrections; no universal exponential error-growth law is assumed~\cite{woodman2007}.
+
+    \item \textbf{Barometric altimeters:}
+    Atmospheric pressure measurements provide estimates of relative altitude. Changing weather and local airflow can affect these estimates, which must be interpreted within the state-estimation system.
+
+    \item \textbf{Ultrasonic ranging and downward optical flow:}
+    Ultrasonic sensors provide short-range distance measurements, while downward-facing cameras estimate image motion relative to the observed surface. These modalities can support terrain following and landing, but optical flow alone is not a direct proximity measurement~\cite{chang2023}. The draft's \SI{40}{\kilo\hertz} ultrasonic frequency and operating distance below \SI{5}{\metre} are illustrative sensor assumptions requiring device-specific verification.
+
+    \item \textbf{Lightweight solid-state LiDAR and stereo cameras:}
+    These sensors can support obstacle detection and local mapping when their mass, power, and processing requirements fit the aircraft's resource budget.
+\end{enumerate}
+
+\section{Navigation, Localization, and Trajectory Planning}
+The platforms share state-estimation and planning concepts, but differ in the geometry and constraints of their operating environments.
+
+\subsection{Ground Navigation}
+Ground navigation follows road lanes, intersections, and other structured routes. High-definition (HD) prior maps can provide a reference for localization. The techniques considered in the draft include normal distributions transform (NDT) and iterative closest point (ICP) scan matching, with extended Kalman filter (EKF) fusion. These are examples of components that may be combined, not a mandatory pipeline or a guarantee of centimeter-level localization.
+
+Planning and control operate at different levels. Graph-search methods such as \(A^*\) and Dijkstra's algorithm can determine routes. Quintic polynomials can represent candidate local trajectories, while model predictive control (MPC) can optimize or track motion subject to vehicle constraints. These techniques must be integrated with obstacle prediction and collision checking to support lane changes and pedestrian interactions~\cite{paden2016}.
+
+\subsection{Aerial Navigation}
+UAV navigation takes place in 3D airspace constrained by obstacles, airspace rules, and aircraft dynamics. In GNSS-denied environments, visual and visual--inertial approaches provide alternatives for localization and mapping~\cite{chang2023}. Simultaneous localization and mapping (SLAM) estimates state while building or maintaining a map. VINS-Mono combines a monocular camera and an IMU for visual--inertial estimation with loop closure, while ORB-SLAM3 supports visual, visual--inertial, and multimap SLAM configurations~\cite{vinsmono,orbslam3}.
+
+Minimum-snap optimization can generate smooth polynomial trajectories for quadrotors~\cite{mellinger2011}. Sampling-based methods such as \(\mathrm{RRT}^*\) can search for paths~\cite{karaman2011}. Path search, trajectory generation, and flight control are distinct tasks: obstacle clearance and dynamic feasibility require explicit constraints. Neither method alone guarantees avoidance of aerodynamic stall or other loss-of-control conditions.
+
+\section{Operational Environments and Physical Constraints}
+Operational constraints determine which tasks each platform can serve.
+
+\subsection{Terrestrial Domain}
+Ground vehicles encounter dense obstacles, variable surface friction, traffic signals, and pedestrian crossings. Surface congestion can limit delivery speed. Emergency stopping or pulling over is a possible fallback, not an inherently safe outcome in every road scenario; fallback behavior must be selected for the operating conditions~\cite{nhtsa2017}.
+
+\subsection{Aerial Domain}
+Aerial routes can bypass road bottlenecks, but are not necessarily straight or unrestricted. Crosswinds, aerodynamic drag, and battery capacity affect payload and endurance. For multirotors, supporting additional mass increases propulsion demand; the relationship depends on aircraft design and operating conditions rather than on a universal exponential endurance penalty~\cite{stolaroff2018}.
+
+The payload and mission-duration values in Table~\ref{tab:comparison} remain draft assumptions. No common vehicle class, battery specification, reserve policy, or test procedure was supplied to make them directly comparable.
+
+\section{Safety, Ethics, and Regulatory Frameworks}
+Safety assurance must address both system failures and the limits of intended operation. Technical standards, legal requirements, and operational permissions serve different purposes.
+
+\subsection{Aviation Safety and Operating Permissions}
+In the United States, the Federal Aviation Administration (FAA) describes Part 135 operator certification as the pathway for qualifying drone package-delivery operations. Beyond visual line of sight (BVLOS) operation also requires the relevant approvals, exemptions, or waivers; Part 135 should not be described as the rule governing all commercial drone activity~\cite{faaDelivery}.
+
+Remote identification (Remote ID) is a separate requirement. The FAA describes several compliance pathways, with exemptions and operational conditions; in particular, using a broadcast module does not itself authorize BVLOS flight~\cite{faaRemoteID}. Unmanned aircraft system traffic management (UTM) may support coordination at scale, but the supplied references do not establish a universal mandate for an autonomous UTM network.
+
+In the European framework administered by the European Union Aviation Safety Agency (EASA) and national authorities, the \emph{specific} category is an operational risk category, not a blanket certification for all delivery drones. Operational authorization is generally required, with defined alternatives such as applicable standard scenarios or privileges under a light UAS operator certificate~\cite{easaSpecific}.
+
+\subsection{Automotive Integrity and Ethics}
+ISO 26262 addresses functional safety of safety-related electrical and electronic systems in applicable road vehicles. Automotive safety integrity levels (ASILs) arise from hazard analysis and risk assessment; ASIL D is not a universal classification for every AV or component~\cite{iso26262}. ISO 21448 addresses safety of the intended functionality (SOTIF), including hazards arising from functional insufficiencies~\cite{iso21448}.
+
+In the United States, Federal Motor Vehicle Safety Standards (FMVSS) apply to relevant motor-vehicle designs, while road-operation requirements also depend on jurisdiction~\cite{nhtsa2017}. Their applicability should not automatically be extended to all sidewalk delivery robots. Ethical considerations include the transparency of collision-risk decisions and privacy protection for collected data; anonymization is one measure rather than a complete privacy framework.
+
+\section{Hybrid Multimodal Integration: The Future of Logistics}
+Ground and aerial platforms can be considered as cooperating elements of a delivery system. Truck--drone combinations are discussed in the logistics literature~\cite{engesser2023}; the architecture below is a conceptual proposal, not a demonstrated implementation.
+
+\subsection{Mobile Mothership Model}
+A larger autonomous ground vehicle would act as a mobile distribution hub, transporting consolidated freight before dispatching drones for selected deliveries.
+
+\subsection{Roof-Mounted Autonomous Launch and Docking}
+Roof-mounted bays would provide launch and recovery locations for multirotor drones. The proposed final delivery leg of \SIrange{1}{2}{\kilo\metre} is a mission-design assumption, not a verified range or a regulatory allowance. Launching from or landing on a moving vehicle requires separate technical and safety validation.
+
+\subsection{Autonomous In-Transit Recharging}
+Returning drones could dock for telemetry exchange, package reloading, and energy replenishment. Contact or inductive pads would support recharging; battery exchange would require a separate swapping mechanism. Reliable moving-platform recovery, charging compatibility, and automated parcel handling remain requirements to be demonstrated rather than established capabilities of the proposed system.
+
+\section{Conclusion}
+Autonomous ground vehicles and UAVs offer complementary capabilities for last-mile delivery. Larger ground platforms are suited to consolidated loads, whereas small aerial platforms can serve selected lightweight or time-critical deliveries without following road routes. Both remain constrained by their operating environments, energy requirements, and safety obligations.
+
+A cooperative logistics network is therefore a design option, not an inevitable outcome or a demonstrated improvement. Its value should be evaluated for defined platforms and missions, with validated sensing and navigation, appropriate operating permissions, and comparable performance evidence. The present review establishes a qualitative comparison and a conceptual integration approach; it does not establish class-wide payload, endurance, safety, or environmental advantages.
+
+\newpage
+\section{Comparative Summary}
+Table~\ref{tab:comparison} consolidates the comparison. It distinguishes illustrative numerical assumptions from platform-dependent capabilities and regulatory considerations.
+
+\begin{table}[htbp]
+\centering
+\caption{Qualitative comparison of autonomous ground vehicles and small multirotor delivery drones.}
+\label{tab:comparison}
+\begingroup
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.22\linewidth}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Parameter} & \textbf{Autonomous ground vehicles (AVs)} & \textbf{Small delivery drones (UAVs)} \\
+\midrule
+Kinematic envelope & Road or sidewalk surface; nonholonomic constraints for car-like vehicles & 3D flight; underactuated six-degree-of-freedom motion for conventional multirotors \\[3pt]
+Payload capacity\textsuperscript{a} & \SI{50}{\kilogram} to more than \SI{1500}{\kilogram} & \SIrange{1.5}{5.0}{\kilogram} \\[3pt]
+Mission duration\textsuperscript{a} & \SIrange{8}{16}{\hour} & \SIrange{20}{35}{\minute} \\[3pt]
+Weather constraints & Visibility and traction; limits depend on vehicle and operating domain & Wind, turbulence, precipitation, and icing; limits depend on aircraft \\[3pt]
+Fallback options & Controlled stop or pull-over, where feasible & Emergency landing or a parachute, where supported; autorotation requires aircraft-specific justification \\[3pt]
+Navigation examples & HD maps, RTK-GNSS, scan matching, factor-graph SLAM, and MPC & Visual--inertial odometry (VIO), SLAM, and minimum-snap trajectories \\[3pt]
+Safety and regulatory considerations & ISO 26262; ISO 21448 (SOTIF); applicable FMVSS and local operating rules & FAA Part 135 for qualifying delivery operations; BVLOS permissions; Remote ID; applicable EASA category \\
+\bottomrule
+\end{tabularx}
+\par\vspace{5pt}
+\begin{minipage}{\linewidth}
+\footnotesize\textsuperscript{a}Values are retained from the supplied draft and remain unverified. They are not measured results, universal limits, or like-for-like benchmarks. Ground ranges refer to larger vehicles rather than all sidewalk robots. Fallback options require platform-specific validation; no generic autorotation capability is assumed for the multirotor class.
+\end{minipage}
+\endgroup
+\end{table}
+
+\begin{thebibliography}{99}
+\small
+\raggedright
+\setlength{\itemsep}{4pt}
+
+\bibitem{who2018}
+World Health Organization, \emph{Global Status Report on Road Safety 2018}. Geneva: World Health Organization, 2018.
+
+\bibitem{engesser2023}
+V. Engesser, E. Rombaut, L. Vanhaverbeke, and P. Lebeau, ``Autonomous delivery solutions for last-mile logistics operations: A literature review and research agenda,'' \emph{Sustainability}, vol. 15, no. 3, Art. no. 2774, 2023. doi: \nolinkurl{10.3390/su15032774}.
+
+\bibitem{stolaroff2018}
+J. K. Stolaroff, C. Samaras, E. R. O'Neill, A. Lubers, A. S. Mitchell, and D. Ceperley, ``Energy use and life cycle greenhouse gas emissions of drones for commercial package delivery,'' \emph{Nature Communications}, vol. 9, Art. no. 409, 2018. doi: \nolinkurl{10.1038/s41467-017-02411-5}.
+
+\bibitem{yeong2021}
+D. J. Yeong, G. Velasco-Hernandez, J. Barry, and J. Walsh, ``Sensor and sensor fusion technology in autonomous vehicles: A review,'' \emph{Sensors}, vol. 21, no. 6, Art. no. 2140, 2021. doi: \nolinkurl{10.3390/s21062140}.
+
+\bibitem{hasanujjaman2023}
+M. Hasanujjaman, M. Z. Chowdhury, and Y. M. Jang, ``Sensor fusion in autonomous vehicle with traffic surveillance camera system: Detection, localization, and AI networking,'' \emph{Sensors}, vol. 23, no. 6, Art. no. 3335, 2023. doi: \nolinkurl{10.3390/s23063335}.
+
+\bibitem{tiRadar}
+Texas Instruments, ``Intro to mmWave sensing: FMCW radars---Module 1: Range estimation,'' technical training, June 6, 2024. [Online]. Available: \url{https://www.ti.com/video/5415203482001}. Accessed: September 30, 2026.
+
+\bibitem{weather2023}
+H. Li, N. Bamminger, Z. F. Magosi, C. Feichtinger, Y. Zhao, T. Mihalj, F. Orucevic, and A. Eichberger, ``The effect of rainfall and illumination on automotive sensors detection performance,'' \emph{Sustainability}, vol. 15, no. 9, Art. no. 7260, 2023. doi: \nolinkurl{10.3390/su15097260}.
+
+\bibitem{chang2023}
+Y. Chang, Y. Cheng, U. Manzoor, and J. Murray, ``A review of UAV autonomous navigation in GPS-denied environments,'' \emph{Robotics and Autonomous Systems}, vol. 170, Art. no. 104533, 2023. doi: \nolinkurl{10.1016/j.robot.2023.104533}.
+
+\bibitem{woodman2007}
+O. J. Woodman, ``An introduction to inertial navigation,'' Computer Laboratory, University of Cambridge, Tech. Rep. UCAM-CL-TR-696, August 2007.
+
+\bibitem{paden2016}
+B. Paden, M. \v{C}ap, S. Z. Yong, D. Yershov, and E. Frazzoli, ``A survey of motion planning and control techniques for self-driving urban vehicles,'' arXiv:1604.07446, 2016.
+
+\bibitem{vinsmono}
+T. Qin, P. Li, and S. Shen, ``VINS-Mono: A robust and versatile monocular visual-inertial state estimator,'' arXiv:1708.03852, 2017.
+
+\bibitem{orbslam3}
+C. Campos, R. Elvira, J. J. G\'omez Rodr\'iguez, J. M. M. Montiel, and J. D. Tard\'os, ``ORB-SLAM3: An accurate open-source library for visual, visual-inertial and multi-map SLAM,'' arXiv:2007.11898, 2020.
+
+\bibitem{mellinger2011}
+D. Mellinger and V. Kumar, ``Minimum snap trajectory generation and control for quadrotors,'' in \emph{Proceedings of the IEEE International Conference on Robotics and Automation}, pp. 2520--2525, 2011. doi: \nolinkurl{10.1109/ICRA.2011.5980409}.
+
+\bibitem{karaman2011}
+S. Karaman and E. Frazzoli, ``Sampling-based algorithms for optimal motion planning,'' \emph{The International Journal of Robotics Research}, vol. 30, no. 7, pp. 846--894, 2011.
+
+\bibitem{nhtsa2017}
+National Highway Traffic Safety Administration, \emph{Automated Driving Systems 2.0: A Vision for Safety}. U.S. Department of Transportation, September 2017.
+
+\bibitem{faaDelivery}
+Federal Aviation Administration, ``Package delivery by drone (Part 135),'' U.S. Department of Transportation. [Online]. Available: \url{https://www.faa.gov/uas/advanced_operations/package_delivery_drone}. Accessed: September 30, 2026.
+
+\bibitem{faaRemoteID}
+Federal Aviation Administration, ``Remote identification of drones,'' U.S. Department of Transportation. [Online]. Available: \url{https://www.faa.gov/uas/getting_started/remote_id}. Accessed: September 30, 2026.
+
+\bibitem{easaSpecific}
+European Union Aviation Safety Agency, ``Specific category---Civil drones.'' [Online]. Available: \url{https://www.easa.europa.eu/en/domains/drones-air-mobility/operating-drone/specific-category-civil-drones}. Accessed: September 30, 2026.
+
+\bibitem{iso26262}
+International Organization for Standardization, \emph{Road Vehicles---Functional Safety---Part 3: Concept Phase}, ISO 26262-3:2018, 2018.
+
+\bibitem{iso21448}
+International Organization for Standardization, \emph{Road Vehicles---Safety of the Intended Functionality}, ISO 21448:2022, 2022.
+
+\end{thebibliography}
+\end{document}
